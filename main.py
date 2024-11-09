@@ -15,21 +15,42 @@ class Config:
     num_weapon_classes = 12
     model_name = 'google/electra-base-discriminator'
     
-    # Define all the binary columns (remove categorical ones from this list)
+    # Define binary columns based on mental health history, diagnoses, contributing factors, and disclosure
     binary_columns = [
-        'DepressedMood', 'MentalIllnessTreatmentCurrnt', 'HistoryMentalIllnessTreatmnt',
-        'SuicideAttemptHistory', 'SuicideThoughtHistory', 'SubstanceAbuseProblem',
-        'MentalHealthProblem', 'DiagnosisAnxiety', 'DiagnosisDepressionDysthymia',
-        'DiagnosisBipolar', 'DiagnosisAdhd', 'IntimatePartnerProblem',
-        'FamilyRelationship', 'Argument', 'SchoolProblem', 'RecentCriminalLegalProblem',
-        'SuicideNote', 'SuicideIntentDisclosed', 'DisclosedToIntimatePartner',
-        'DisclosedToOtherFamilyMember', 'DisclosedToFriend'
+        # Mental health history and current state
+        'DepressedMood',  # Person perceived to be depressed at time
+        'MentalIllnessTreatmentCurrnt',  # Currently in mental health/substance abuse treatment
+        'HistoryMentalIllnessTreatmnt',  # History of mental health/substance abuse treatment
+        'SuicideAttemptHistory',  # Previous suicide attempts
+        'SuicideThoughtHistory',  # History of suicidal thoughts/plans
+        'SubstanceAbuseProblem',  # Substance abuse issues
+        'MentalHealthProblem',  # Mental health condition at time
+        
+        # Specific mental health diagnoses
+        'DiagnosisAnxiety',
+        'DiagnosisDepressionDysthymia', 
+        'DiagnosisBipolar',
+        'DiagnosisAdhd',
+        
+        # Contributing factors
+        'IntimatePartnerProblem',  # Problems with current/former partner
+        'FamilyRelationship',  # Family relationship problems
+        'Argument',  # Arguments/conflicts
+        'SchoolProblem',  # School-related problems
+        'RecentCriminalLegalProblem',  # Criminal legal problems
+        
+        # Disclosure of intent
+        'SuicideNote',  # Left suicide note
+        'SuicideIntentDisclosed',  # Disclosed intent in last month
+        'DisclosedToIntimatePartner',  # Disclosed to partner
+        'DisclosedToOtherFamilyMember',  # Disclosed to family
+        'DisclosedToFriend'  # Disclosed to friend
     ]
     
     # Categorical column mappings
     injury_location_map = {
         1: 'House, apartment',
-        2: 'Motor vehicle',
+        2: 'Motor vehicle', 
         3: 'Natural area',
         4: 'Park, playground',
         5: 'Street/road',
@@ -175,15 +196,12 @@ def generate_predictions(features: pd.DataFrame, submission_format: pd.DataFrame
     injury_predictions = np.vstack(injury_predictions)
     weapon_predictions = np.vstack(weapon_predictions)
     
-    # Round binary predictions to 0 or 1
-    binary_predictions = np.round(binary_predictions).astype(int)
-    
     # Convert categorical predictions to class indices
     injury_classes = np.argmax(injury_predictions, axis=1) + 1  # Add 1 for 1-based indexing
     weapon_classes = np.argmax(weapon_predictions, axis=1) + 1
     
-    # Create predictions dataframe
-    predictions_df = pd.DataFrame(binary_predictions, columns=config.binary_columns, index=submission_format.index)
+    # Create predictions dataframe and round binary predictions to integers
+    predictions_df = pd.DataFrame(np.round(binary_predictions).astype(int), columns=config.binary_columns, index=submission_format.index)
     predictions_df['InjuryLocationType'] = injury_classes
     predictions_df['WeaponType1'] = weapon_classes
     
